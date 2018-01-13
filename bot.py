@@ -10,20 +10,23 @@ import goodnatt as gnatt
 import random
 import shlex
 import sys
+from utility import log
 
 __author__ = "Oboark"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 client = discord.Client()
 
 #Bot variables
 presence = 'you yoo'
 help_string = """
-**shitty documentation:
+**ahh!! here is some help:
 
 `!goodnatt [number of emojis]` - Sends a bunch of wholesome emojis :sparkling_heart:
 `!sponge [text]` - i aM A fuCkinG dEGenErate :100:
 `!purge [num of messages] [specified string]` - Deletes a bunch of messages (you gotta be authorized to use this) :no_good::skin-tone-2:
+`gofford, [thing] or [other thing] or [other other thing]` - Make me decide!
+`!8ball [query]` - summon the 8ball
 **
 """
 authorized_roles = ['399702651278983168', '399702073924517888']
@@ -67,20 +70,42 @@ async def on_message(message):
             try:
                 n = int(c[1])
                 s = c[2]
-                await client.send_message(message.channel, "**Deleting {} messages containing '{}'...**".format(n, s))
+                log(message.author.name, message.channel.name, "**Deleting {} messages containing '{}'...**".format(n, s))
                 await purge(message, n, s)
             except IndexError:
                 try:
                     n = int(c[1])
-                    await client.send_message(message.channel, "**Deleting {} messages...**".format(n))
+                    log(message.author.name, message.channel.name, "**Deleting {} messages...**".format(n))
                     await purge(message, n)
                 except IndexError:
-                    await client.send_message(message.channel, "**Deleting {} messages...**".format(10))
+                    log(message.author.name, message.channel.name, "**Deleting {} messages...**".format(10))
                     await purge(message)
         else:
             #If not, send a message indicating they aren't authorized
             await client.send_message(message.channel, ":no_good::skin-tone-2:")
-
+    elif message.content.startswith('wherest mein gofford'):
+        await client.send_message(message.channel, ':sunflower:')
+        await client.send_message(message.channel, 'i am here uwu')
+    elif message.content.startswith('gofford, '):
+        if ' or ' in message.content:
+            #Made for the decision function
+            await client.send_message(message.channel, await decide(message) + '?')
+        elif ' lov' in message.content:
+            #Made for something like "gofford, i love you!"
+            await client.send_message(message.channel, "i lomv you too!!")
+            await client.send_message(message.channel, ":sparkling_heart:")
+    elif message.content == 'gofford':
+        await client.send_message(message.channel, "heb?")
+    elif message.content.startswith('!8ball'):
+        p = ['It is certain', 'It is decidedly so', 'Without a doubt', 
+                        'Yes definitely', 'You may rely on it', 'As I see it, yes',
+                        'Most likely', 'Outlook good', 'Yes', 'Signs point to yes', 
+                        'Reply hazy try again', 'Ask again later', 'Better not tell you now',
+                        'Cannot predict now', 'Concentrate and ask again', 'Dont count on it',
+                        'My reply is no', 'My sources say no', 'Outlook not so good', 'Very doubtful']
+        
+        await client.send_message(message.channel, ":8ball:")
+        await client.send_message(message.channel, random.choice(p))
 
 @client.event
 async def on_member_join(member):
@@ -88,7 +113,7 @@ async def on_member_join(member):
     #Assign normie role to new user
     role = discord.utils.get(member.server.roles, name='normie')
     await client.add_roles(member, role)
-    print("Assigned normie role to user {}".format(member.name))
+    log(member.name, 'general', "Assigned normie role to user {}".format(member.name))
 
 
 async def help(message):
@@ -130,6 +155,19 @@ async def purge(message, num_msgs=10, s=""):
             msgs.append(x)
     
     await client.delete_messages(msgs)
+
+
+async def decide(message):
+    """Decides randomly based on user's query"""
+    
+    a = message.content.split()
+    b = []
+    for i in a:
+        if not i in ['gofford,', 'or']:
+            i = i.strip('?')
+            b.append(i)
+        
+    return random.choice(b)
 
 
 if __name__ == '__main__':

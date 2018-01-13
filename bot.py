@@ -1,9 +1,18 @@
+#!/usr/bin/env python
+
+"""
+gofford-bot source code
+"""
+
 import discord
 import asyncio
 import goodnatt as gnatt
 import random
 import shlex
 import sys
+
+__author__ = "Oboark"
+__version__ = "1.0.0"
 
 client = discord.Client()
 
@@ -19,19 +28,24 @@ help_string = """
 """
 authorized_roles = ['399702651278983168', '399702073924517888']
 
+
 @client.event
 async def on_ready():
-    'Do something on startup'
+    """Do something on startup"""
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
     print('------')
 
+    #Change the bot presence to 'presence'
     await client.change_presence(game=discord.Game(name=presence))
+
 
 @client.event
 async def on_message(message):
     """Do something on message"""
+
+    #Handle commands
     if message.content.startswith('!help'):
         await help(message)
     elif message.content.startswith('!goodnatt'):
@@ -67,16 +81,20 @@ async def on_message(message):
             #If not, send a message indicating they aren't authorized
             await client.send_message(message.channel, ":no_good::skin-tone-2:")
 
+
 @client.event
 async def on_member_join(member):
     """Do something when somebody joins the server"""
     #Assign normie role to new user
     role = discord.utils.get(member.server.roles, name='normie')
     await client.add_roles(member, role)
+    print("Assigned normie role to user {}".format(member.name))
+
 
 async def help(message):
     """Sends help"""
     await client.send_message(message.channel, help_string)
+
 
 async def goodnatt(message):
     """Sends a bunch of wholesome emojis"""
@@ -89,22 +107,30 @@ async def goodnatt(message):
         #Else, send a message anyways with 10 emojis (default)
         await client.send_message(message.channel, gnatt.goodnatt(gnatt.emoji_list, 10))
 
+
 async def sponge(message):
     """gEnErATEs SpONge TeXt aND SEnds iT"""
+    #Randomize message capitalization
     sponge_text = "".join(random.choice([k.upper(), k ]) for k in message.content[7:])
+    #Send the messages
     if sponge_text: 
         await client.send_message(message.channel, sponge_text)
     await client.send_file(message.channel, 'assets\sponge.jpg')
 
+
 async def purge(message, num_msgs=10, s=""):
     """Deletes a bulk of messages"""
 
+    #Empty list to store the messages we will be deleting
     msgs = []
+    #Collect messages
     async for x in client.logs_from(message.channel, limit = num_msgs):
-        if s in x.content: 
+        #Check if message contains specified string, if so, add to our soon-to-be-deleted-messages
+        if s in x.content:
             msgs.append(x)
     
     await client.delete_messages(msgs)
+
 
 if __name__ == '__main__':
     token = sys.argv[1] if len(sys.argv) > 1 else sys.exit(0)

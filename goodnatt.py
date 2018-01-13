@@ -1,3 +1,8 @@
+"""
+Generates a bunch of wholesome emojis
+https://github.com/Oboark/goodnatt-tradition
+"""
+
 import random
 
 #Default emoji list we feed to the function

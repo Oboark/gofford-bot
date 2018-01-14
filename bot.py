@@ -117,7 +117,7 @@ async def on_message(message):
             #Made for something like "gofford, i love you!"
             await client.send_message(message.channel, "i lomv you too!!")
             await client.send_message(message.channel, ":sparkling_heart:")
-        elif ' how' or ' why' or ' what' in message.content:
+        elif any(s in message.content for s in [' how', ' why', ' what']):
             #Made for something like "gofford, how do i fix this?"
             p = ["¯\_(ツ)_/¯", "https://www.google.com/", "42"]
             await client.send_message(message.channel, random.choice(p))
@@ -204,12 +204,12 @@ async def purge(message, num_msgs=10, s=""):
 async def decide(message):
     """Decides randomly based on user's query"""
     
-    a = message.content.lower().split()
+    a = message.content.lower().split(' or ')
     b = []
     for i in a:
-        if not i in ['gofford,', 'or']:
-            i = i.strip('?')
-            b.append(i)
+        for banned in ['?', 'gofford, ']:
+            i = i.strip(banned)
+        b.append(i)
         
     return random.choice(b)
 

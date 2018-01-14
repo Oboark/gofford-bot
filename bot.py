@@ -10,17 +10,17 @@ import goodnatt as gnatt
 import random
 import shlex
 import sys
-from utility import log
+from utility import log, read_settings, write_settings
 from emoji import to_emoji
 
 __author__ = "Oboark"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 client = discord.Client()
 
 #Bot variables
-default_role = 'normie' #Default role the bot sets
-presence = 'you yoo'
+authorized_users = ["340140981586493442", "398191324685402112"] #Developer users who can change global settings/use global commands
+presence = 'you woo'
 help_string = """
 **ahh!! here is some help:
 
@@ -32,9 +32,12 @@ help_string = """
 
 moderator stuff: (you gotta be authorized to use this) :no_good::skin-tone-2:
 `!purge [num of messages] [specified string]` - Deletes a bunch of messages
-`!presence [presence]` - Set the "Playing ..."
+`!defaultrole [default role]` - Sets the default role of the server (Be CaSe SenSiTiVe!)
 
-support me!!
+developer stuff: (you gotta be SUPER authorized to use this) :no_entry_sign: :no_good::skin-tone-4: :no_entry_sign:
+`!presence [presence]` - Sets the 'Playing....' thing
+
+my inner workings:
 https://github.com/Oboark/gofford-bot
 v{}
 **
@@ -55,10 +58,12 @@ async def on_ready():
 @client.event
 async def on_member_join(member):
     """Do something when somebody joins the server"""
+
     #Assign normie role to new user
-    role = discord.utils.get(member.server.roles, name='normie')
+    role_name = read_settings(member.server.id, id='default_role')
+    role = discord.utils.get(member.server.roles, name=role_name)
     await client.add_roles(member, role)
-    log(member.name, 'joined_general', member.server, "Assigned {} role".format(default_role))
+    log(member.name, 'joined', member.server, "Assigned {} role".format(role_name))
 
 
 @client.event
@@ -133,11 +138,12 @@ async def on_message(message):
         s = message.content[8:]
         await client.send_message(message.channel, to_emoji(s))
     elif message.content.startswith('!presence'):
+        """THIS IS A GLOBAL FUNCTION"""
+
         #Check if user is authorized
         auth = False
-        for r in message.author.roles:
-            if r.permissions.administrator:
-                auth = True
+        if message.author.id in authorized_users:
+            auth = True
 
         if auth:
             #If so, do the procedure
@@ -149,6 +155,8 @@ async def on_message(message):
         else:
             #If not, send a message indicating they aren't authorized
             await client.send_message(message.channel, ":no_good::skin-tone-2:")
+    elif message.content.startswith('!defaultrole'):
+        await set_default_role(message)
 
 
 async def help(message):
@@ -203,6 +211,23 @@ async def decide(message):
             b.append(i)
         
     return random.choice(b)
+
+
+async def set_default_role(message):
+    #Check if user is authorized
+    auth = False
+    for r in message.author.roles:
+        if r.permissions.administrator:
+            auth = True
+
+    if auth:
+        role_name = message.content[13:]
+        await client.send_message(message.channel, "Setting default server role to '{}'...".format(role_name))
+        log(message.author.name, message.channel, message.server, "Setting default server role to '{}'...".format(role_name))
+        write_settings(message.server, default_role=role_name)
+        await client.send_message(message.channel, ":white_check_mark:")
+    else:
+        await client.send_message(message.channel, ':no_good::skin-tone-2:')
 
 
 if __name__ == '__main__':

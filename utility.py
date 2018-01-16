@@ -42,3 +42,33 @@ def read_settings(server_id, id='nAn'):
             data = p[id]
 
     return data
+
+
+def write_message(message):
+    """Writes message data to file"""
+
+    new_settings = {}
+    new_settings[str(message.id)] = []
+    new_settings[str(message.id)].append({
+        'u': message.author.name,
+        'c': message.content,
+        't': message.timestamp.strftime('%m/%d/%Y/%H/%M/%S')
+    })
+
+    with open('data/messages.json') as f:
+        settings = json.load(f)
+
+    settings.update(new_settings)
+
+    with open('data/messages.json', 'w') as f:
+        json.dump(settings, f, indent=4)
+
+
+def authorized(user):
+    """Checks if a user is authorized"""
+    auth = False
+    for r in user.roles:
+        if r.permissions.administrator:
+            auth = True
+
+    return auth

@@ -10,11 +10,11 @@ import goodnatt as gnatt
 import random
 import shlex
 import sys
-from utility import log, read_settings, write_settings
+from utility import log, read_settings, write_settings, write_message, authorized
 from emoji import to_emoji
 
 __author__ = "Oboark"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 client = discord.Client()
 
@@ -33,6 +33,7 @@ help_string = """
 moderator stuff: (you gotta be authorized to use this) :no_good::skin-tone-2:
 `!purge [num of messages] [specified string]` - Deletes a bunch of messages
 `!defaultrole [default role]` - Sets the default role of the server (Be CaSe SenSiTiVe!)
+`!send [channel id] "message"` - Sends a message to a specified channel
 
 developer stuff: (you gotta be SUPER authorized to use this) :no_entry_sign: :no_good::skin-tone-4: :no_entry_sign:
 `!presence [presence]` - Sets the 'Playing....' thing
@@ -79,13 +80,7 @@ async def on_message(message):
     elif message.content.startswith('!sponge'):
         await sponge(message)
     elif message.content.startswith('!purge'):
-        #Check if user is authorized
-        auth = False
-        for r in message.author.roles:
-            if r.permissions.administrator:
-                auth = True
-
-        if auth:
+        if authorized(message.author):
             #If so, do the procedure
             #add deleting 
             await client.send_message(message.channel, ":white_check_mark:")
@@ -123,7 +118,7 @@ async def on_message(message):
             await client.send_message(message.channel, random.choice(p))
     elif message.content.lower() == 'gofford':
         await client.send_message(message.channel, "heb?")
-    elif message.content.startswith('!8ball'):
+    elif message.content.startswith('!hateball') or message.content.startswith('!8ball'):
         p = ['It is certain', 'It is decidedly so', 'Without a doubt', 
                         'Yes definitely', 'You may rely on it', 'As I see it, yes',
                         'Most likely', 'Outlook good', 'Yes', 'Signs point to yes', 
@@ -158,6 +153,11 @@ async def on_message(message):
             await client.send_message(message.channel, ":no_good::skin-tone-2:")
     elif message.content.startswith('!defaultrole'):
         await set_default_role(message)
+    elif message.content.startswith('!send'):
+        await send_message(message)
+    else:
+        #Save message for data science use
+        write_message(message)
 
 
 async def help(message):
@@ -208,25 +208,33 @@ async def decide(message):
     b = []
     for i in a:
         for banned in ['?', 'gofford, ']:
-            i = i.strip(banned)
+            i = i.replace(banned, '')
         b.append(i)
-        
+
     return random.choice(b)
 
 
 async def set_default_role(message):
-    #Check if user is authorized
-    auth = False
-    for r in message.author.roles:
-        if r.permissions.administrator:
-            auth = True
+    """Sets the default role of the server"""
 
-    if auth:
+    if authorized(message.author):
         role_name = message.content[13:]
         await client.send_message(message.channel, "Setting default server role to '{}'...".format(role_name))
         log(message.author.name, message.channel, message.server, "Setting default server role to '{}'...".format(role_name))
         write_settings(message.server, default_role=role_name)
         await client.send_message(message.channel, ":white_check_mark:")
+    else:
+        await client.send_message(message.channel, ':no_good::skin-tone-2:')
+
+
+async def send_message(message):
+    """Sends a message to a specified channel"""
+
+    if authorized(message.author):
+        msg = shlex.split(message.content)
+        channel_id = msg[1]
+        content = msg[2]
+        await client.send_message(client.get_channel(channel_id), content)
     else:
         await client.send_message(message.channel, ':no_good::skin-tone-2:')
 

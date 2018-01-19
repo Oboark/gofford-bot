@@ -3,7 +3,6 @@
 """
 gofford-bot source code
 """
-
 import discord
 import asyncio
 import goodnatt as gnatt
@@ -32,7 +31,7 @@ help_string = """
 
 moderator stuff: (you gotta be authorized to use this) :no_good::skin-tone-2:
 `!purge [num of messages] [specified string]` - Deletes a bunch of messages
-`!defaultrole [default role]` - Sets the default role of the server (Be CaSe SenSiTiVe!)
+`!defaultrole [default role id]` - Sets the default role of the server (Be CaSe SenSiTiVe!)
 `!send [channel id] "message"` - Sends a message to a specified channel
 
 developer stuff: (you gotta be SUPER authorized to use this) :no_entry_sign: :no_good::skin-tone-4: :no_entry_sign:
@@ -62,10 +61,10 @@ async def on_member_join(member):
     """Do something when somebody joins the server"""
 
     #Assign normie role to new user
-    role_name = read_settings(member.server.id, id='default_role')
-    role = discord.utils.get(member.server.roles, name=role_name)
+    role_id = read_settings(member.server.id, id='default_role')
+    role = discord.utils.get(member.server.roles, id=role_id)
     await client.add_roles(member, role)
-    log(member.name, 'joined', member.server, "Assigned {} role".format(role_name))
+    log(member.name, 'joined', member.server, "Assigned {} role".format(role.name))
 
 
 @client.event
@@ -218,10 +217,11 @@ async def set_default_role(message):
     """Sets the default role of the server"""
 
     if authorized(message.author):
-        role_name = message.content[13:]
-        await client.send_message(message.channel, "Setting default server role to '{}'...".format(role_name))
-        log(message.author.name, message.channel, message.server, "Setting default server role to '{}'...".format(role_name))
-        write_settings(message.server, default_role=role_name)
+        role_id = message.content[13:]
+        role = discord.utils.get(message.server.roles, id=role_id)
+        await client.send_message(message.channel, "Setting default server role to '{}'...".format(role.name))
+        log(message.author.name, message.channel, message.server, "Setting default server role to '{}'...".format(role.name))
+        write_settings(message.server, default_role=role_id)
         await client.send_message(message.channel, ":white_check_mark:")
     else:
         await client.send_message(message.channel, ':no_good::skin-tone-2:')

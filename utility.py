@@ -10,7 +10,14 @@ import discord
 def log(user='nAn', channel='nAn', server='nAn', content='nAn'):
     """Print logs with username, channel and content"""
     date = str(datetime.now())
-    print('[{} by {} in {} from {}] {}'.format(date, user, channel, server, content))
+    log = '[{} by {} in {} from {}] {}'.format(date, user, channel, server, content)
+    
+    #Print log
+    print(log)
+
+    #Append to log file
+    with open("data/server.log", "a") as f:
+        f.write(log + '\n')
 
 
 def write_settings(server, default_role='nAn'):
@@ -47,21 +54,21 @@ def read_settings(server_id, id='nAn'):
 def write_message(message):
     """Writes message data to file"""
 
-    new_settings = {}
-    new_settings[str(message.id)] = []
-    new_settings[str(message.id)].append({
+    new_message = {}
+    new_message[str(message.id)] = []
+    new_message[str(message.id)].append({
         'u': message.author.name,
         'c': message.content,
         't': message.timestamp.strftime('%m/%d/%Y/%H/%M/%S')
     })
 
     with open('data/messages.json') as f:
-        settings = json.load(f)
+        messages = json.load(f)
 
-    settings.update(new_settings)
+    messages.update(new_message)
 
     with open('data/messages.json', 'w') as f:
-        json.dump(settings, f, indent=4)
+        json.dump(messages, f)
 
 
 def authorized(user):

@@ -25,7 +25,7 @@ help_string = """
 
 `gofford, [thing] or [other thing] or [other other thing]` - Make me decide!
 `!goodnatt [number of emojis]` - Sends a bunch of wholesome emojis :sparkling_heart:
-`!sponge [text]` - i aM A fuCkinG dEGenErate :100:
+`!sponge [text]` - i aM A dEGenErate :100:
 `!8ball [query]` - summon the 8ball :8ball:
 `!emojify [text]` :regional_indicator_e: :regional_indicator_m: :regional_indicator_o: :regional_indicator_j: :regional_indicator_i: :regional_indicator_f: :regional_indicator_y:     :regional_indicator_t: :regional_indicator_e: :regional_indicator_x: :regional_indicator_t:
 
@@ -70,6 +70,10 @@ async def on_member_join(member):
 @client.event
 async def on_message(message):
     """Do something on message"""
+
+    if message.author.id in "356717413829705730" and message.content.startswith('!'):
+        await client.send_message(message.channel, random.choice(['edgy', 'sure', 'no', 'edgelord', 'nice one', 'funny', 'smart']))
+        return
 
     #Handle commands
     if message.content.startswith('!help'):

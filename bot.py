@@ -18,11 +18,16 @@ __version__ = "1.0.4"
 client = discord.Client()
 
 #Bot variables
+exclusive_roles = ['ai girlfriends', 'admin', 'dyno', 'mee6', 'rythm', 'gofford', 'music slave',
+                   'staff', 'familia', 'sweetie bot', 'quiet', 'sweetie bot', 'friendly musician']
+
 authorized_users = ["340140981586493442", "398191324685402112"] #Developer users who can change global settings/use global commands
 presence = 'you woo'
 help_string = """
 **ahh!! here is some help:
 
+`!role "role name"` - assigns role
+`!removerole "role name"` - removes a role
 `gofford, [thing] or [other thing] or [other other thing]` - Make me decide!
 `!goodnatt [number of emojis]` - Sends a bunch of wholesome emojis :sparkling_heart:
 `!sponge [text]` - i aM A dEGenErate :100:
@@ -31,7 +36,6 @@ help_string = """
 
 moderator stuff: (you gotta be authorized to use this) :no_good::skin-tone-2:
 `!purge [num of messages] [specified string]` - Deletes a bunch of messages
-`!defaultrole [default role id]` - Sets the default role of the server (Be CaSe SenSiTiVe!)
 `!send [channel id] "message"` - Sends a message to a specified channel
 
 developer stuff: (you gotta be SUPER authorized to use this) :no_entry_sign: :no_good::skin-tone-4: :no_entry_sign:
@@ -59,9 +63,13 @@ async def on_ready():
 @client.event
 async def on_member_join(member):
     """Do something when somebody joins the server"""
+    color_roles = []
+    for r in member.server.roles:
+        if r.name not in exclusive_roles:
+            color_roles.append(r.id)
 
     #Assign normie role to new user
-    role_id = read_settings(member.server.id, id='default_role')
+    role_id = random.choice(color_roles)
     role = discord.utils.get(member.server.roles, id=role_id)
     await client.add_roles(member, role)
     log(member.name, 'joined', member.server, "Assigned {} role".format(role.name))
@@ -70,11 +78,7 @@ async def on_member_join(member):
 @client.event
 async def on_message(message):
     """Do something on message"""
-
-    if message.author.id in "356717413829705730" and message.content.startswith('!'):
-        await client.send_message(message.channel, random.choice(['edgy', 'sure', 'no', 'edgelord', 'nice one', 'funny', 'smart']))
-        return
-
+    
     #Handle commands
     if message.content.startswith('!help'):
         await help(message)
@@ -154,13 +158,15 @@ async def on_message(message):
         else:
             #If not, send a message indicating they aren't authorized
             await client.send_message(message.channel, ":no_good::skin-tone-2:")
-    elif message.content.startswith('!defaultrole'):
-        await set_default_role(message)
+    elif message.content.startswith('!role'):
+        await assign_role(message)
+    elif message.content.startswith('!removerole'):
+        await remove_role(message)
     elif message.content.startswith('!send'):
         await send_message(message)
-    else:
+    """else:
         #Save message for data science use
-        write_message(message)
+        write_message(message)"""
 
 
 async def help(message):
@@ -217,20 +223,6 @@ async def decide(message):
     return random.choice(b)
 
 
-async def set_default_role(message):
-    """Sets the default role of the server"""
-
-    if authorized(message.author):
-        role_id = message.content[13:]
-        role = discord.utils.get(message.server.roles, id=role_id)
-        await client.send_message(message.channel, "Setting default server role to '{}'...".format(role.name))
-        log(message.author.name, message.channel, message.server, "Setting default server role to '{}'...".format(role.name))
-        write_settings(message.server, default_role=role_id)
-        await client.send_message(message.channel, ":white_check_mark:")
-    else:
-        await client.send_message(message.channel, ':no_good::skin-tone-2:')
-
-
 async def send_message(message):
     """Sends a message to a specified channel"""
 
@@ -241,6 +233,46 @@ async def send_message(message):
         await client.send_message(client.get_channel(channel_id), content)
     else:
         await client.send_message(message.channel, ':no_good::skin-tone-2:')
+
+
+async def assign_role(message):
+    """assign a role"""
+    role_name = shlex.split(message.content)[1]
+    role_id = None
+
+    for r in message.server.roles:
+        if r.name == role_name and r.name not in exclusive_roles:
+            await client.send_message(message.channel, "role set!!")
+            role_id = r.id
+
+    # if role does not exist
+    if role_id == None:
+        await client.send_message(message.channel, "role does not exist or you don't have sufficient privileges")
+        return
+
+    # assign found role
+    role = discord.utils.get(message.server.roles, id=role_id)
+    await client.add_roles(message.author, role)
+
+
+async def remove_role(message):
+    """removes a role"""
+    role_name = shlex.split(message.content)[1]
+    role_id = None
+
+    for r in message.author.roles:
+        if r.name == role_name and r.name not in exclusive_roles:
+            await client.send_message(message.channel, "removed role!!")
+            role_id = r.id
+
+    # if role does not exist
+    if role_id == None:
+        await client.send_message(message.channel, "role does not exist or you don't have sufficient privileges")
+        return
+
+    # assign found role
+    role = discord.utils.get(message.server.roles, id=role_id)
+    await client.remove_roles(message.author, role)
 
 
 if __name__ == '__main__':

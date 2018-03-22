@@ -5,7 +5,8 @@ Contains utility functions for moderation and server settings
 from datetime import datetime
 import json
 import discord
-
+from pathlib import Path
+import random
 
 def log(user='nAn', channel='nAn', server='nAn', content='nAn'):
     """Print logs with username, channel and content"""
@@ -48,3 +49,13 @@ def authorized(user):
             auth = True
 
     return auth
+
+
+def random_image(path):
+    # collect all files in the specified path
+    images = Path('assets/tashi').glob('**/*.jpg')
+    image_list = list()
+    for f in images:
+        image_list.append(str(f))
+
+    return random.choice(image_list)

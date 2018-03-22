@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 gofford-bot source code
 """
@@ -9,15 +7,15 @@ import goodnatt as gnatt
 import random
 import shlex
 import sys
-from utility import log, read_settings, write_settings, write_message, authorized
+from utility import *
 from emoji import to_emoji
 
 __author__ = "Oboark"
-__version__ = "1.0.4"
+__version__ = "1.0.6"
 
 client = discord.Client()
 
-#Bot variables
+# Bot variables
 exclusive_roles = ['ai girlfriends', 'admin', 'dyno', 'mee6', 'rythm', 'gofford', 'music slave',
                    'staff', 'familia', 'sweetie bot', 'quiet', 'sweetie bot', 'friendly musician']
 
@@ -33,6 +31,8 @@ help_string = """
 `!sponge [text]` - i aM A dEGenErate :100:
 `!8ball [query]` - summon the 8ball :8ball:
 `!emojify [text]` :regional_indicator_e: :regional_indicator_m: :regional_indicator_o: :regional_indicator_j: :regional_indicator_i: :regional_indicator_f: :regional_indicator_y:     :regional_indicator_t: :regional_indicator_e: :regional_indicator_x: :regional_indicator_t:
+`!tashi` - ok
+`!justice` - wdf
 
 moderator stuff: (you gotta be authorized to use this) :no_good::skin-tone-2:
 `!purge [num of messages] [specified string]` - Deletes a bunch of messages
@@ -56,7 +56,7 @@ async def on_ready():
     print(__version__)
     print('------')
 
-    #Change the bot presence to 'presence'
+    # Change the bot presence to 'presence'
     await client.change_presence(game=discord.Game(name=presence))
 
 
@@ -68,7 +68,7 @@ async def on_member_join(member):
         if r.name not in exclusive_roles:
             color_roles.append(r.id)
 
-    #Assign normie role to new user
+    # Assign normie role to new user
     role_id = random.choice(color_roles)
     role = discord.utils.get(member.server.roles, id=role_id)
     await client.add_roles(member, role)
@@ -79,7 +79,7 @@ async def on_member_join(member):
 async def on_message(message):
     """Do something on message"""
     
-    #Handle commands
+    # Handle commands
     if message.content.startswith('!help'):
         await help(message)
     elif message.content.startswith('!goodnatt'):
@@ -88,8 +88,8 @@ async def on_message(message):
         await sponge(message)
     elif message.content.startswith('!purge'):
         if authorized(message.author):
-            #If so, do the procedure
-            #add deleting 
+            # If so, do the procedure
+            # add deleting 
             await client.send_message(message.channel, ":white_check_mark:")
             c = shlex.split(message.content)
             try:
@@ -106,21 +106,21 @@ async def on_message(message):
                     log(message.author.name, message.channel.name, message.server, "**Deleting {} messages...**".format(10))
                     await purge(message)
         else:
-            #If not, send a message indicating they aren't authorized
+            # If not, send a message indicating they aren't authorized
             await client.send_message(message.channel, ":no_good::skin-tone-2:")
     elif message.content.lower().startswith('wherest mein gofford'):
         await client.send_message(message.channel, ':sunflower:')
         await client.send_message(message.channel, 'i am here uwu')
     elif message.content.lower().startswith('gofford, '):
         if ' or ' in message.content:
-            #Made for the decision function
+            # Made for the decision function
             await client.send_message(message.channel, await decide(message) + '?')
         elif ' lov' in message.content:
-            #Made for something like "gofford, i love you!"
+            # Made for something like "gofford, i love you!"
             await client.send_message(message.channel, "i lomv you too!!")
             await client.send_message(message.channel, ":sparkling_heart:")
         elif any(s in message.content for s in [' how', ' why', ' what']):
-            #Made for something like "gofford, how do i fix this?"
+            # Made for something like "gofford, how do i fix this?"
             p = ["¯\_(ツ)_/¯", "https://www.google.com/", "42"]
             await client.send_message(message.channel, random.choice(p))
     elif message.content.lower() == 'gofford':
@@ -143,20 +143,20 @@ async def on_message(message):
     elif message.content.startswith('!presence'):
         """THIS IS A GLOBAL FUNCTION"""
 
-        #Check if user is authorized
+        # Check if user is authorized
         auth = False
         if message.author.id in authorized_users:
             auth = True
 
         if auth:
-            #If so, do the procedure
+            # If so, do the procedure
             await client.send_message(message.channel, ":white_check_mark:")
             presence = message.content[10:]
             await client.change_presence(game=discord.Game(name=presence))
             await client.send_message(message.channel, "Set!")
             log(message.author.name, message.channel.name, message.server, "Presence is set to '{}'".format(presence))
         else:
-            #If not, send a message indicating they aren't authorized
+            # If not, send a message indicating they aren't authorized
             await client.send_message(message.channel, ":no_good::skin-tone-2:")
     elif message.content.startswith('!role'):
         await assign_role(message)
@@ -164,8 +164,14 @@ async def on_message(message):
         await remove_role(message)
     elif message.content.startswith('!send'):
         await send_message(message)
+    elif message.content.startswith('!tashi'):
+        await client.send_file(message.channel, random_image('assets/tashi'))
+    elif message.content.startswith('!justice'):
+        await client.send_file(message.channel, random_image('assets/justice'))
+        
+
     """else:
-        #Save message for data science use
+        # Save message for data science use
         write_message(message)"""
 
 
@@ -177,20 +183,20 @@ async def help(message):
 async def goodnatt(message):
     """Sends a bunch of wholesome emojis"""
     try:
-        #Try to get number of emojis specified
+        # Try to get number of emojis specified
         n = int(shlex.split(message.content)[1])
-        #Send message with n emojis
+        # Send message with n emojis
         await client.send_message(message.channel, gnatt.goodnatt(gnatt.emoji_list, n))
     except Exception:
-        #Else, send a message anyways with 10 emojis (default)
+        # Else, send a message anyways with 10 emojis (default)
         await client.send_message(message.channel, gnatt.goodnatt(gnatt.emoji_list, 10))
 
 
 async def sponge(message):
     """gEnErATEs SpONge TeXt aND SEnds iT"""
-    #Randomize message capitalization
+    # Randomize message capitalization
     sponge_text = "".join(random.choice([k.upper(), k ]) for k in message.content[7:])
-    #Send the messages
+    # Send the messages
     if sponge_text: 
         await client.send_message(message.channel, sponge_text)
     await client.send_file(message.channel, 'assets/sponge.jpg')
@@ -199,11 +205,11 @@ async def sponge(message):
 async def purge(message, num_msgs=10, s=""):
     """Deletes a bulk of messages"""
 
-    #Empty list to store the messages we will be deleting
+    # Empty list to store the messages we will be deleting
     msgs = []
-    #Collect messages
+    # Collect messages
     async for x in client.logs_from(message.channel, limit = num_msgs):
-        #Check if message contains specified string, if so, add to our soon-to-be-deleted-messages
+        # Check if message contains specified string, if so, add to our soon-to-be-deleted-messages
         if s in x.content:
             msgs.append(x)
     

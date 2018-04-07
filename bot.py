@@ -15,6 +15,9 @@ __version__ = "1.0.6"
 
 client = discord.Client()
 
+# track message count to do things periodically
+message_count = 0
+
 # Bot variables
 exclusive_roles = ['ai girlfriends', 'admin', 'dyno', 'mee6', 'rythm', 'gofford', 'music slave',
                    'staff', 'familia', 'sweetie bot', 'quiet', 'sweetie bot', 'friendly musician']
@@ -72,13 +75,14 @@ async def on_member_join(member):
     role_id = random.choice(color_roles)
     role = discord.utils.get(member.server.roles, id=role_id)
     await client.add_roles(member, role)
-    log(member.name, 'joined', member.server, "Assigned {} role".format(role.name))
 
 
 @client.event
 async def on_message(message):
     """Do something on message"""
     
+    global message_count
+
     # Handle commands
     if message.content.startswith('!help'):
         await help(message)
@@ -168,12 +172,17 @@ async def on_message(message):
         await client.send_file(message.channel, random_image('assets/tashi'))
     elif message.content.startswith('!justice'):
         await client.send_file(message.channel, random_image('assets/justice'))
-        
+    
+    # other utilities
+    if authorized(message.author):
+        # Save message to track Ellie's number of pings
+        write_message(message)
+    if message_count % 50 == 0:
+        # track number of users
+        print("Number of messages since gofford initialized: ", message_count)
+        log("Number of users: {}".format(len(message.server.members)))
 
-    """else:
-        # Save message for data science use
-        write_message(message)"""
-
+    message_count += 1
 
 async def help(message):
     """Sends help"""
@@ -244,12 +253,7 @@ async def send_message(message):
 async def assign_role(message):
     """assign a role"""
     role_name = shlex.split(message.content)[1]
-    role_id = None
-
-    for r in message.server.roles:
-        if r.name == role_name and r.name not in exclusive_roles:
-            await client.send_message(message.channel, "role set!!")
-            role_id = r.id
+    role_id = authorized_less(message.author)
 
     # if role does not exist
     if role_id == None:
